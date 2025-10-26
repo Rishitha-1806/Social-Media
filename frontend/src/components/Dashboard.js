@@ -10,16 +10,17 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
-  const API_URL = "http://localhost:5000/api/posts";
-
   const fetchPosts = async () => {
+    if (!user?.token) return;
     setLoading(true);
     try {
-      const res = await axios.get(API_URL);
+      const res = await axios.get(`http://localhost:5000/api/posts/user/${user._id}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
       setPosts(res.data);
     } catch (err) {
-      console.error(err);
-      alert("Error fetching posts");
+      console.error("Error fetching posts:", err);
+      alert("Error fetching posts.");
     } finally {
       setLoading(false);
     }
@@ -27,18 +28,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [user]);
 
   const handleDelete = async (postId) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
-    setLoading(true);
+
     try {
-      await axios.delete(`${API_URL}/${postId}`);
-      fetchPosts();
+      await axios.delete(`http://localhost:5000/api/posts/${postId}`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+
+      setPosts((prev) => prev.filter((p) => p._id !== postId));
     } catch (err) {
-      console.error(err);
-      alert("Error deleting post");
-      setLoading(false);
+      console.error("Delete post error:", err);
+      alert("Failed to delete post.");
     }
   };
 
@@ -54,11 +57,9 @@ const Dashboard = () => {
 
         <div className="post-feed">
           {!loading && posts.length === 0 && <p>No posts to show.</p>}
-          {posts.map((post) => {
-            // Determine post owner ID safely
-            const postOwnerId =
-              typeof post.user === "string" ? post.user : post.user?._id;
 
+          {posts.map((post) => {
+            const postOwnerId = post.user?._id || post.user;
             return (
               <PostCard
                 key={post._id}
@@ -76,4 +77,8 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
+
+
 

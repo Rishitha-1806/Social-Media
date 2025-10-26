@@ -1,42 +1,43 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import Navbar from "./Navbar";
+import Navbar from "./Navbar"; // Import the existing Navbar component
 import "./Auth.css";
 
 const Profile = () => {
-  const { id: paramId } = useParams(); 
-  const { user } = useAuth(); 
-  const userId = paramId || user?._id; 
-
-  const [profile, setProfile] = useState(null);
+  const { user } = useAuth();
+  const [profileData, setProfileData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!userId) {
-        setError("No user found. Please log in.");
-        setLoading(false);
-        return;
-      }
-
       try {
-        const res = await axios.get(`http://localhost:5000/api/users/${userId}`);
-        setProfile(res.data);
+        const res = await axios.get(`http://localhost:5000/api/users/${user._id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setProfileData(res.data);
         setPosts(res.data.posts || []);
-        setLoading(false);
       } catch (err) {
         console.error("Error fetching profile:", err);
-        setError("Failed to fetch profile. Check if the user exists.");
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
-  }, [userId]);
+    if (user) fetchProfile();
+  }, [user]);
+
+  const handleDelete = async (postId) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/posts/${postId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setPosts(posts.filter((post) => post._id !== postId));
+    } catch (err) {
+      console.error("Delete post error:", err);
+    }
+  };
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -46,54 +47,71 @@ const Profile = () => {
     formData.append("avatar", file);
 
     try {
-      await axios.put(`http://localhost:5000/api/users/${userId}/avatar`, formData);
-      window.location.reload();
+      const res = await axios.put(
+        `http://localhost:5000/api/users/avatar/${user._id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setProfileData({ ...profileData, avatar: res.data.avatar });
     } catch (err) {
-      console.error("Error updating avatar:", err);
-      setError("Failed to update avatar.");
+      console.error("Avatar upload error:", err);
     }
   };
 
-  if (loading) return <p>Loading profile...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <div className="spinner-container"><div className="spinner"></div></div>;
 
   return (
     <div className="dashboard-layout">
-      <Navbar />
+      <Navbar /> {/* Reuse the existing dashboard navbar */}
+
       <div className="dashboard-main">
-        <div className="profile-header">
-          <img
-            src={profile.avatar || "/default-avatar.png"}
-            alt="avatar"
-            className="profile-avatar-big"
-          />
-          {user && user._id === userId && (
+        {profileData && (
+          <div className="profile-header">
+            <img
+              src={profileData.avatar || "/default-avatar.png"}
+              alt="avatar"
+              className="profile-avatar-big"
+            />
+            <p className="profile-username">{profileData.username}</p>
+
             <div className="avatar-upload-container">
               <label className="avatar-upload-label">
                 Change Avatar
                 <input type="file" onChange={handleAvatarChange} />
               </label>
             </div>
-          )}
-          <h2>{profile.username}</h2>
-          <div className="profile-stats">
-            <span><strong>{posts.length}</strong> posts</span>
-            <span><strong>{profile.followers?.length || 0}</strong> followers</span>
-            <span><strong>{profile.following?.length || 0}</strong> following</span>
+
+            <div className="profile-stats">
+              <span>Posts: {posts.length}</span>
+              <span>Followers: {profileData.followers?.length || 0}</span>
+              <span>Following: {profileData.following?.length || 0}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="post-feed">
-          {posts.length > 0 ? (
-            posts.map((post) => (
-              <div key={post._id} className="post-card">
-                {post.image && <img src={post.image} alt="Post" className="post-image" />}
-                <p>{post.caption}</p>
+          {posts.map((post) => (
+            <div className="post-card" key={post._id}>
+              <div className="post-header">
+                <img
+                  src={profileData.avatar || "/default-avatar.png"}
+                  alt="avatar"
+                  className="post-avatar"
+                />
+                <span className="post-username">{profileData.username}</span>
               </div>
-            ))
-          ) : (
-            <p>No posts yet.</p>
-          )}
+              <div className="post-content">
+                <p>{post.content}</p>
+                {post.image && <img src={post.image} alt="post" className="post-image" />}
+              </div>
+              <button className="delete-btn" onClick={() => handleDelete(post._id)}>Delete</button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -101,4 +119,8 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
+
+
 

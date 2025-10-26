@@ -1,81 +1,69 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
-import Navbar from "../components/Navbar";
+import Navbar from "./Navbar";
 import "./Auth.css";
 
-const Post = () => {
-  const { user } = useAuth();
-  const [caption, setCaption] = useState("");
+const PostForm = () => {
+  const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    if (file) setPreview(URL.createObjectURL(file));
+    setImage(e.target.files[0]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!caption && !image) {
-      setMessage("Please add a caption or an image.");
-      return;
-    }
+    setLoading(true);
+    setMessage("");
 
     const formData = new FormData();
-    formData.append("caption", caption);
+    formData.append("content", content);
     if (image) formData.append("image", image);
 
     try {
-      setLoading(true);
-      await axios.post("http://localhost:5000/api/posts", formData, {
+      const res = await axios.post("http://localhost:5000/api/posts", formData, {
         headers: {
-          Authorization: `Bearer ${user?.token}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "multipart/form-data",
         },
       });
-      setMessage("Post uploaded successfully!");
-      setCaption("");
+
+      setMessage("Post created successfully!");
+      setContent("");
       setImage(null);
-      setPreview(null);
-    } catch (error) {
-      setMessage("Failed to upload post. Try again.");
-      console.error(error);
+    } catch (err) {
+      console.error("Create post error:", err);
+      setMessage("Failed to create post.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
+    <div className="dashboard-layout">
       <Navbar />
-      <div className="post-page">
+
+      <div className="dashboard-main">
         <div className="create-post-card">
-          <h2>Create a New Post</h2>
-          <p className="post-subtext">Share your thoughts or an image ✨</p>
+          <h2>Create Post</h2>
+          <p className="post-subtext">Share your thoughts with your friends 🌍</p>
 
           {message && <div className="post-message">{message}</div>}
 
-          <form onSubmit={handleSubmit} className="create-post-form">
+          <form className="create-post-form" onSubmit={handleSubmit}>
             <textarea
-              placeholder="Write a caption..."
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
+              placeholder="What's on your mind?"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              required
             />
 
             <label className="upload-label">
-              <input type="file" accept="image/*" onChange={handleImageChange} />
-              <span>📸 Upload Image</span>
+              Upload Image
+              <input type="file" onChange={handleImageChange} />
             </label>
-
-            {preview && (
-              <div className="image-preview">
-                <img src={preview} alt="Preview" />
-              </div>
-            )}
 
             <button type="submit" disabled={loading}>
               {loading ? "Posting..." : "Post"}
@@ -83,14 +71,9 @@ const Post = () => {
           </form>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
-export default Post;
-
-
-
-
-
+export default PostForm;
 

@@ -28,18 +28,15 @@ const Login = () => {
         password,
       });
 
-      //save user in context
-      login(res.data.user);
+      // Save user and token in context
+      login(res.data.user, res.data.token);
 
-      //save token separately
-      localStorage.setItem("token", res.data.token);
-
-      //set default Axios header
+      // Optional: set default Axios header
       axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
 
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       setError(err.response?.data?.message || "Invalid username or password");
     } finally {
       setLoading(false);
@@ -86,4 +83,6 @@ const Login = () => {
 };
 
 export default Login;
+
+
 
