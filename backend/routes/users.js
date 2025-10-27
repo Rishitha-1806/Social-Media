@@ -5,24 +5,21 @@ const path = require("path");
 const fs = require("fs");
 const User = require("../models/User");
 const Post = require("../models/Post");
-const AuthMiddleware = require("../middleware/auth"); // ✅ corrected import
+const auth = require("../middleware/auth");
 
-// ------------------------
-// Multer setup for avatar
-// ------------------------
-const UPLOADS_FOLDER = "uploads";
+const UPLOADS_FOLDER = path.join(__dirname, "../uploads");
 if (!fs.existsSync(UPLOADS_FOLDER)) fs.mkdirSync(UPLOADS_FOLDER);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOADS_FOLDER),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
+  filename: (req, file, cb) => cb(null, `${req.user.id}${path.extname(file.originalname)}`),
 });
 
 const upload = multer({ storage });
 
-// ------------------------
-// GET user profile by ID
-// ------------------------
+// ---------------------------
+// Get user profile
+// ---------------------------
 router.get("/:userId", async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select("-password");
@@ -36,21 +33,24 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
-// ------------------------
-// UPDATE avatar
-// ------------------------
-router.put("/avatar", AuthMiddleware, upload.single("avatar"), async (req, res) => {
+// ---------------------------
+// Update avatar
+// ---------------------------
+router.put("/avatar", auth, upload.single("avatar"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-    const userId = req.user.id;
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { avatar: req.file.filename },
+    const avatarPath = `/uploads/${req.file.filename}`;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatar: avatarPath },
       { new: true }
     );
 
-    res.json({ message: "Avatar updated successfully", avatar: updatedUser.avatar });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ message: "Avatar updated successfully", avatar: user.avatar });
   } catch (err) {
     console.error("Update avatar error:", err);
     res.status(500).json({ message: "Server error" });
@@ -58,4 +58,7 @@ router.put("/avatar", AuthMiddleware, upload.single("avatar"), async (req, res) 
 });
 
 module.exports = router;
+
+
+
 

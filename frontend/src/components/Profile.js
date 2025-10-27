@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-import Navbar from "./Navbar"; // Import the existing Navbar component
+import Navbar from "./Navbar";
 import "./Auth.css";
 
 const Profile = () => {
@@ -14,9 +14,11 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/users/${user._id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         });
-        setProfileData(res.data);
+        setProfileData(res.data.user);
         setPosts(res.data.posts || []);
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -48,7 +50,7 @@ const Profile = () => {
 
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/users/avatar/${user._id}`,
+        `http://localhost:5000/api/users/avatar`,
         formData,
         {
           headers: {
@@ -57,23 +59,40 @@ const Profile = () => {
           },
         }
       );
-      setProfileData({ ...profileData, avatar: res.data.avatar });
+
+      setProfileData((prev) => ({
+        ...prev,
+        avatar: res.data.avatar,
+      }));
+
+      // Update user avatar in posts immediately
+      setPosts((prev) =>
+        prev.map((post) => ({
+          ...post,
+          user: { ...post.user, avatar: res.data.avatar },
+        }))
+      );
     } catch (err) {
       console.error("Avatar upload error:", err);
     }
   };
 
-  if (loading) return <div className="spinner-container"><div className="spinner"></div></div>;
+  if (loading)
+    return (
+      <div className="spinner-container">
+        <div className="spinner"></div>
+      </div>
+    );
 
   return (
     <div className="dashboard-layout">
-      <Navbar /> {/* Reuse the existing dashboard navbar */}
+      <Navbar />
 
       <div className="dashboard-main">
         {profileData && (
           <div className="profile-header">
             <img
-              src={profileData.avatar || "/default-avatar.png"}
+              src={`http://localhost:5000${profileData.avatar || "/uploads/default.png"}`}
               alt="avatar"
               className="profile-avatar-big"
             />
@@ -99,7 +118,7 @@ const Profile = () => {
             <div className="post-card" key={post._id}>
               <div className="post-header">
                 <img
-                  src={profileData.avatar || "/default-avatar.png"}
+                  src={`http://localhost:5000${profileData.avatar || "/uploads/default.png"}`}
                   alt="avatar"
                   className="post-avatar"
                 />
@@ -107,9 +126,17 @@ const Profile = () => {
               </div>
               <div className="post-content">
                 <p>{post.content}</p>
-                {post.image && <img src={post.image} alt="post" className="post-image" />}
+                {post.image && (
+                  <img
+                    src={`http://localhost:5000${post.image}`}
+                    alt="post"
+                    className="post-image"
+                  />
+                )}
               </div>
-              <button className="delete-btn" onClick={() => handleDelete(post._id)}>Delete</button>
+              <button className="delete-btn" onClick={() => handleDelete(post._id)}>
+                Delete
+              </button>
             </div>
           ))}
         </div>
@@ -119,8 +146,3 @@ const Profile = () => {
 };
 
 export default Profile;
-
-
-
-
-
