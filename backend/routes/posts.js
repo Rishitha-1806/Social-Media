@@ -6,18 +6,17 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Ensure uploads folder exists
 const UPLOADS_FOLDER = "uploads";
 if (!fs.existsSync(UPLOADS_FOLDER)) fs.mkdirSync(UPLOADS_FOLDER);
 
-// Multer storage setup
+//multer storage setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOADS_FOLDER),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
 const upload = multer({ storage });
 
-// -------------------- Create Post --------------------
+//creates the post
 router.post("/", AuthMiddleware, upload.single("image"), async (req, res) => {
   try {
     const { title } = req.body;
@@ -37,7 +36,7 @@ router.post("/", AuthMiddleware, upload.single("image"), async (req, res) => {
   }
 });
 
-// -------------------- Get All Posts --------------------
+//get all the post
 router.get("/", async (req, res) => {
   try {
     const posts = await Post.find().populate("user", "username avatar").sort({ createdAt: -1 });
@@ -48,7 +47,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// -------------------- Get Posts for Logged-in User --------------------
+//get posts for logged-in user 
 router.get("/user", AuthMiddleware, async (req, res) => {
   try {
     const posts = await Post.find({ user: req.user.id }).populate("user", "username avatar");
@@ -59,7 +58,7 @@ router.get("/user", AuthMiddleware, async (req, res) => {
   }
 });
 
-// -------------------- Get Posts for Any User (Profile Page) --------------------
+//get posts for any user
 router.get("/user/:userId", async (req, res) => {
   try {
     const posts = await Post.find({ user: req.params.userId }).populate("user", "username avatar");
@@ -70,18 +69,18 @@ router.get("/user/:userId", async (req, res) => {
   }
 });
 
-// -------------------- Delete Post --------------------
+//deletes the post
 router.delete("/:id", AuthMiddleware, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ msg: "Post not found" });
 
-    // Only owner can delete
+    //only owner can delete
     if (post.user.toString() !== req.user.id) {
       return res.status(401).json({ msg: "Not authorized" });
     }
 
-    // Delete image file if exists
+    //delete image file if exists
     if (post.image) {
       const imagePath = path.join(__dirname, "..", post.image);
       if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);

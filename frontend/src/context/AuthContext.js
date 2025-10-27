@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
     return savedUser
-      ? { ...JSON.parse(savedUser), token }  // attach token here
+      ? { ...JSON.parse(savedUser), token }
       : null;
   });
 
@@ -35,14 +35,24 @@ export const AuthProvider = ({ children }) => {
     setUser({ ...userData, token });
   };
 
+  const updateAvatar = (avatar) => {
+    setUser((prev) => ({
+      ...prev,
+      avatar,
+    }));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, registerUser }}>
+    <AuthContext.Provider
+      value={{ user, login, logout, registerUser, updateAvatar }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
+
 
 
 

@@ -28,10 +28,10 @@ const Login = () => {
         password,
       });
 
-      // Save user and token in context
+      //save user and token in context
       login(res.data.user, res.data.token);
 
-      // Optional: set default Axios header
+      //optional: set default axios header
       axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
 
       navigate("/dashboard");
