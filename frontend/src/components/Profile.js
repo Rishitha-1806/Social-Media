@@ -13,11 +13,14 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        if (!user?._id) return;
+
         const res = await axios.get(`http://localhost:5000/api/users/${user._id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
+
         setProfileData(res.data.user);
         setPosts(res.data.posts || []);
       } catch (err) {
@@ -27,20 +30,21 @@ const Profile = () => {
       }
     };
 
-    if (user) fetchProfile();
+    fetchProfile();
   }, [user]);
-
+  //delete post
   const handleDelete = async (postId) => {
     try {
       await axios.delete(`http://localhost:5000/api/posts/${postId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      setPosts(posts.filter((post) => post._id !== postId));
+      setPosts((prev) => prev.filter((post) => post._id !== postId));
     } catch (err) {
       console.error("Delete post error:", err);
     }
   };
 
+  //change avatar
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -50,7 +54,7 @@ const Profile = () => {
 
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/users/avatar`,
+        "http://localhost:5000/api/users/avatar",
         formData,
         {
           headers: {
@@ -60,16 +64,13 @@ const Profile = () => {
         }
       );
 
-      setProfileData((prev) => ({
-        ...prev,
-        avatar: res.data.avatar,
-      }));
-
-      // Update user avatar in posts immediately
+      //update avatar in profile and posts
+      const newAvatar = res.data.avatar;
+      setProfileData((prev) => ({ ...prev, avatar: newAvatar }));
       setPosts((prev) =>
         prev.map((post) => ({
           ...post,
-          user: { ...post.user, avatar: res.data.avatar },
+          user: { ...post.user, avatar: newAvatar },
         }))
       );
     } catch (err) {
@@ -77,12 +78,13 @@ const Profile = () => {
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="spinner-container">
         <div className="spinner"></div>
       </div>
     );
+  }
 
   return (
     <div className="dashboard-layout">
@@ -92,11 +94,16 @@ const Profile = () => {
         {profileData && (
           <div className="profile-header">
             <img
-              src={`http://localhost:5000${profileData.avatar || "/uploads/default.png"}`}
+              src={
+                profileData.avatar
+                  ? `http://localhost:5000${profileData.avatar}`
+                  : "/uploads/default.png"
+              }
               alt="avatar"
               className="profile-avatar-big"
             />
             <p className="profile-username">{profileData.username}</p>
+            <p className="profile-email">{profileData.email}</p>
 
             <div className="avatar-upload-container">
               <label className="avatar-upload-label">
@@ -114,31 +121,44 @@ const Profile = () => {
         )}
 
         <div className="post-feed">
-          {posts.map((post) => (
-            <div className="post-card" key={post._id}>
-              <div className="post-header">
-                <img
-                  src={`http://localhost:5000${profileData.avatar || "/uploads/default.png"}`}
-                  alt="avatar"
-                  className="post-avatar"
-                />
-                <span className="post-username">{profileData.username}</span>
-              </div>
-              <div className="post-content">
-                <p>{post.content}</p>
-                {post.image && (
+          {posts.length === 0 ? (
+            <p className="no-posts">No posts yet.</p>
+          ) : (
+            posts.map((post) => (
+              <div className="post-card" key={post._id}>
+                <div className="post-header">
                   <img
-                    src={`http://localhost:5000${post.image}`}
-                    alt="post"
-                    className="post-image"
+                    src={
+                      profileData.avatar
+                        ? `http://localhost:5000${profileData.avatar}`
+                        : "/uploads/default.png"
+                    }
+                    alt="avatar"
+                    className="post-avatar"
                   />
-                )}
+                  <span className="post-username">{profileData.username}</span>
+                </div>
+
+                <div className="post-content">
+                  <p>{post.content}</p>
+                  {post.image && (
+                    <img
+                      src={`http://localhost:5000${post.image}`}
+                      alt="post"
+                      className="post-image"
+                    />
+                  )}
+                </div>
+
+                <button
+                  className="delete-btn"
+                  onClick={() => handleDelete(post._id)}
+                >
+                  Delete
+                </button>
               </div>
-              <button className="delete-btn" onClick={() => handleDelete(post._id)}>
-                Delete
-              </button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -146,3 +166,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

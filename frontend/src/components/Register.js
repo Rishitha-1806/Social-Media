@@ -7,21 +7,34 @@ import "./Auth.css";
 const Register = () => {
   const { registerUser } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!formData.username || !formData.email || !formData.password) {
+      setError("All fields are required");
+      return;
+    }
+
     try {
       await registerUser(formData);
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
+      console.error("Register error:", err);
       setError(err.response?.data?.message || "Registration failed");
     }
   };
@@ -36,6 +49,7 @@ const Register = () => {
 
       <div className="auth-container">
         <h2>Create Account</h2>
+
         <form onSubmit={handleSubmit}>
           <input
             name="username"
@@ -44,6 +58,7 @@ const Register = () => {
             onChange={handleChange}
             required
           />
+
           <input
             name="email"
             placeholder="Email"
@@ -52,6 +67,7 @@ const Register = () => {
             onChange={handleChange}
             required
           />
+
           <input
             name="password"
             placeholder="Password"
@@ -60,7 +76,9 @@ const Register = () => {
             onChange={handleChange}
             required
           />
+
           <button type="submit">Register</button>
+
           {error && <p className="auth-error">{error}</p>}
         </form>
 
@@ -73,3 +91,4 @@ const Register = () => {
 };
 
 export default Register;
+

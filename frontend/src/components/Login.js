@@ -6,7 +6,7 @@ import logo from "../assets/logo.png";
 import "./Auth.css";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState(""); // username or email
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,21 +23,14 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        username,
-        password,
-      });
+      const res = await login({ identifier, password });
 
-      //save user and token in context
-      login(res.data.user, res.data.token);
-
-      //optional: set default axios header
-      axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+      axios.defaults.headers.common["Authorization"] = `Bearer ${res.token}`;
 
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.response?.data?.message || "Invalid username or password");
+      setError(err.response?.data?.message || "Invalid login details");
     } finally {
       setLoading(false);
     }
@@ -56,11 +49,12 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Username or Email"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             required
           />
+
           <input
             type="password"
             placeholder="Password"
@@ -68,9 +62,11 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+
           <button type="submit" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
+
           {error && <p className="auth-error">{error}</p>}
         </form>
 
@@ -83,6 +79,3 @@ const Login = () => {
 };
 
 export default Login;
-
-
-
