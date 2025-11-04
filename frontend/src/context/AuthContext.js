@@ -4,57 +4,53 @@ import axios from "axios";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-    return savedUser ? { ...JSON.parse(savedUser), token } : null;
-  });
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
 
-  const API_URL = "http://localhost:5000/api/auth";
+  const [token, setToken] = useState(localStorage.getItem("token") || null);
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-      if (user.token) localStorage.setItem("token", user.token);
-    } else {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
-  }, [user]);
+  }, [token]);
 
-  // Register
-  const registerUser = async (formData) => {
-    const res = await axios.post(`${API_URL}/register`, formData);
-    setUser({ ...res.data.user, token: res.data.token });
-    return res.data;
-  };
-
-  // ✅ Login using identifier (email or username)
   const login = async ({ identifier, password }) => {
-    const res = await axios.post(`${API_URL}/login`, {
-      identifier,
-      password,
-    });
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      { identifier, password },
+      { headers: { "Content-Type": "application/json" } }
+    );
 
-    setUser({ ...res.data.user, token: res.data.token });
-    return res.data;
+    const { token, user } = res.data;
+
+    setUser(user);
+    setToken(token);
+
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("token", token);
+
+    return { token, user };
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.clear();
+    setToken(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    delete axios.defaults.headers.common["Authorization"];
   };
 
-  const updateAvatar = (avatar) => {
-    setUser((prev) => ({
-      ...prev,
-      avatar,
-    }));
+  const updateAvatar = (avatarURL) => {
+    const updated = { ...user, avatar: avatarURL };
+    setUser(updated);
+    localStorage.setItem("user", JSON.stringify(updated));
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, registerUser, updateAvatar }}
+      value={{ user, token, login, logout, updateAvatar }}
     >
       {children}
     </AuthContext.Provider>

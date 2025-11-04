@@ -15,16 +15,15 @@ const Profile = () => {
       try {
         if (!user?._id) return;
 
-        const res = await axios.get(`http://localhost:5000/api/users/${user._id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const res = await axios.get(
+          `http://localhost:5000/api/users/${user._id}`,
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          }
+        );
 
         setProfileData(res.data.user);
         setPosts(res.data.posts || []);
-      } catch (err) {
-        console.error("Error fetching profile:", err);
       } finally {
         setLoading(false);
       }
@@ -32,19 +31,16 @@ const Profile = () => {
 
     fetchProfile();
   }, [user]);
-  //delete post
+
   const handleDelete = async (postId) => {
     try {
       await axios.delete(`http://localhost:5000/api/posts/${postId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      setPosts((prev) => prev.filter((post) => post._id !== postId));
-    } catch (err) {
-      console.error("Delete post error:", err);
-    }
+      setPosts((prev) => prev.filter((p) => p._id !== postId));
+    } catch {}
   };
 
-  //change avatar
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -64,18 +60,17 @@ const Profile = () => {
         }
       );
 
-      //update avatar in profile and posts
       const newAvatar = res.data.avatar;
+
       setProfileData((prev) => ({ ...prev, avatar: newAvatar }));
+
       setPosts((prev) =>
         prev.map((post) => ({
           ...post,
           user: { ...post.user, avatar: newAvatar },
         }))
       );
-    } catch (err) {
-      console.error("Avatar upload error:", err);
-    }
+    } catch {}
   };
 
   if (loading) {
@@ -89,19 +84,10 @@ const Profile = () => {
   return (
     <div className="dashboard-layout">
       <Navbar />
-
       <div className="dashboard-main">
         {profileData && (
           <div className="profile-header">
-            <img
-              src={
-                profileData.avatar
-                  ? `http://localhost:5000${profileData.avatar}`
-                  : "/uploads/default.png"
-              }
-              alt="avatar"
-              className="profile-avatar-big"
-            />
+            <img src={profileData.avatar} className="profile-avatar-big" />
             <p className="profile-username">{profileData.username}</p>
             <p className="profile-email">{profileData.email}</p>
 
@@ -127,33 +113,16 @@ const Profile = () => {
             posts.map((post) => (
               <div className="post-card" key={post._id}>
                 <div className="post-header">
-                  <img
-                    src={
-                      profileData.avatar
-                        ? `http://localhost:5000${profileData.avatar}`
-                        : "/uploads/default.png"
-                    }
-                    alt="avatar"
-                    className="post-avatar"
-                  />
+                  <img src={profileData.avatar} className="post-avatar" />
                   <span className="post-username">{profileData.username}</span>
                 </div>
 
                 <div className="post-content">
                   <p>{post.content}</p>
-                  {post.image && (
-                    <img
-                      src={`http://localhost:5000${post.image}`}
-                      alt="post"
-                      className="post-image"
-                    />
-                  )}
+                  {post.image && <img src={post.image} className="post-image" />}
                 </div>
 
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDelete(post._id)}
-                >
+                <button className="delete-btn" onClick={() => handleDelete(post._id)}>
                   Delete
                 </button>
               </div>
@@ -166,4 +135,3 @@ const Profile = () => {
 };
 
 export default Profile;
-

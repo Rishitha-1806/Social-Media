@@ -6,7 +6,7 @@ import logo from "../assets/logo.png";
 import "./Auth.css";
 
 const Login = () => {
-  const [identifier, setIdentifier] = useState(""); // username or email
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,13 +23,9 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await login({ identifier, password });
-
-      axios.defaults.headers.common["Authorization"] = `Bearer ${res.token}`;
-
+      await login({ identifier, password });
       navigate("/dashboard");
     } catch (err) {
-      console.error("Login error:", err);
       setError(err.response?.data?.message || "Invalid login details");
     } finally {
       setLoading(false);
@@ -46,6 +42,7 @@ const Login = () => {
 
       <div className="auth-container">
         <h2>Login</h2>
+
         <form onSubmit={handleSubmit}>
           <input
             type="text"

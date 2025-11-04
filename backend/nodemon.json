@@ -1,0 +1,13 @@
+{
+  "watch": ["server.js", "routes", "models", "middleware"],
+  "ignore": [
+    "uploads",
+    "client",
+    "frontend",
+    "public",
+    "*.jpg",
+    "*.png",
+    "*.jpeg"
+  ],
+  "ext": "js,json"
+}

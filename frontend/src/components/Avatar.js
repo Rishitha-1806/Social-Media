@@ -3,28 +3,32 @@ import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 
 const Avatar = () => {
-  const { user, setUser } = useAuth();
+  const { token, updateAvatar } = useAuth();
   const [image, setImage] = useState(null);
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!image) return alert("Select an image first");
+    if (!image) return;
 
     try {
       const formData = new FormData();
       formData.append("avatar", image);
 
       const res = await axios.put(
-        `http://localhost:5000/api/auth/upload-avatar/${user.id}`,
+        "http://localhost:5000/api/users/avatar",
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
 
-      setUser(res.data);
+      updateAvatar(res.data.avatar);
       setImage(null);
-      alert("Avatar updated!");
+      alert("Avatar updated");
     } catch (err) {
-      console.error(err);
       alert("Failed to upload avatar");
     }
   };
@@ -42,6 +46,3 @@ const Avatar = () => {
 };
 
 export default Avatar;
-
-
-
