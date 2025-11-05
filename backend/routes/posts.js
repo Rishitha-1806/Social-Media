@@ -84,5 +84,28 @@ router.delete("/:id", AuthMiddleware, async (req, res) => {
     res.status(500).send("Server Error");
   }
 });
+// LIKE / UNLIKE POST
+router.put("/:id/like", AuthMiddleware, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const userId = req.user.id;
+
+    if (post.likes.includes(userId)) {
+      // Unlike
+      post.likes = post.likes.filter((id) => id.toString() !== userId);
+    } else {
+      // Like
+      post.likes.push(userId);
+    }
+
+    await post.save();
+    res.json({ likes: post.likes.length, liked: post.likes.includes(userId) });
+  } catch (err) {
+    console.error("Like/unlike post error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = router;

@@ -4,12 +4,14 @@ const PostSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     title: { type: String },
-    image: { type: String }, // Base64 string stored directly
+    image: { type: String }, // Base64 string
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // NEW
   },
   { timestamps: true }
 );
 
 module.exports = mongoose.model("Post", PostSchema);
+
 
 
 
