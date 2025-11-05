@@ -49,33 +49,26 @@ body {
 }
 
 .auth-container {
-  background: #ffffffb3;
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 45px 50px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  width: 380px;
-  text-align: center;
-  color: #333;
-  animation: fadeIn 0.6s ease;
+  width: 100%;
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.07);
 }
 
 .auth-container h2 {
-  margin-bottom: 10px;
-  font-size: 30px;
-  font-weight: 600;
-  color: #2b2b2b;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .auth-container input {
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid #ccc;
   border-radius: 8px;
-  border: 1px solid #d0d0d0;
-  background: #f9f9f9;
-  font-size: 16px;
-  margin-bottom: 18px;
-  transition: 0.2s ease;
 }
 
 .auth-container input:focus {
@@ -155,22 +148,6 @@ body {
   transition: 0.2s;
 }
 
-.navbar a svg,
-.navbar a i {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
-  vertical-align: middle;
-  position: relative;
-  top: -4px;
-  transition: transform 0.3s ease, top 0.3s ease;
-}
-
-.navbar a:hover svg,
-.navbar a:hover i {
-  transform: translateY(-6px);
-}
-
 .navbar a:hover {
   color: #4a7af7;
   transform: translateX(5px);
@@ -200,11 +177,9 @@ body {
 
 .dashboard-main {
   flex: 1;
-  margin-left: 260px; /* space for navbar */
+  margin-left: 260px;
   padding: 30px;
-  display: flex;
-  justify-content: center; /* center content */
-  align-items: flex-start;
+  display: block;
 }
 
 /* create post card */
@@ -215,12 +190,6 @@ body {
   width: 100%;
   max-width: 600px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.create-post-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
 }
 
 .create-post-card h2 {
@@ -251,7 +220,6 @@ body {
   resize: none;
   font-size: 16px;
   background-color: #f9f9f9;
-  transition: 0.2s;
 }
 
 .create-post-form textarea:focus {
@@ -269,11 +237,6 @@ body {
   padding: 12px 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
-}
-
-.upload-label:hover {
-  background: #3c63dd;
 }
 
 .upload-label input {
@@ -289,34 +252,41 @@ body {
   font-size: 17px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
 }
 
-.create-post-form button:hover {
-  background: linear-gradient(90deg, #3c63dd, #4a7af7);
-  transform: scale(1.02);
-}
-
-.post-message {
-  text-align: center;
-  font-weight: 500;
-  color: #444;
-  background: #f0f4ff;
-  padding: 10px 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-/* profile page */
-.profile-container {
+/* POSTS SECTION */
+.posts-container {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+/* ✅ Feed post card */
+.post-card {
+  width: 350px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 22px;
+  border: 1px solid #ddd;
+}
+
+.post-card img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* ✅ Profile Page */
+.profile-container {
+  display: block;
   padding: 45px 20px;
   background-color: #fafafa;
   min-height: 100vh;
 }
 
+/* profile header */
 .profile-header {
   display: flex;
   flex-direction: column;
@@ -354,18 +324,41 @@ body {
 
 .profile-stats {
   display: flex;
-  gap: 40px; /* increased gap between posts, followers, following */
+  gap: 40px;
   font-size: 14px;
   color: #555;
-  margin-top: 10px; /* some spacing below username */
+  margin-top: 10px;
 }
 
 .profile-stats span {
   font-weight: 500;
   text-align: center;
-  min-width: 70px; /* optional: keeps stats aligned evenly */
+  min-width: 70px;
 }
 
+/* ✅ ✅ ✅ Instagram style 3-grid (FINAL FIXED VERSION) */
+.profile-posts {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 6px;
+}
+
+.profile-posts img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #ddd;
+  transition: 0.2s;
+}
+
+.profile-posts img:hover {
+  opacity: 0.85;
+}
 
 /* delete button */
 .delete-btn {
@@ -376,7 +369,6 @@ body {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
 }
 
 .delete-btn:hover {
@@ -399,11 +391,6 @@ body {
   font-size: 15px;
   cursor: pointer;
   font-weight: 500;
-  transition: 0.3s ease;
-}
-
-.avatar-upload-label:hover {
-  background-color: #3c63dd;
 }
 
 .avatar-upload-label input {
@@ -427,14 +414,99 @@ body {
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes spin { 
+  0% { transform: rotate(0deg);} 
+  100% { transform: rotate(360deg);} 
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-15px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ✅ INSTAGRAM STYLE MODAL */
+.ig-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.ig-modal-container {
+  width: 75%;
+  max-width: 900px;
+  height: 80vh;
+  background: #fff;
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* LEFT */
+.ig-modal-image-section {
+  width: 55%;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ig-modal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* RIGHT */
+.ig-modal-right {
+  width: 45%;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ig-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+
+.ig-modal-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ig-modal-username {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.ig-modal-caption {
+  display: flex;
+  gap: 6px;
+  padding: 10px 0;
+  font-size: 14px;
+}
+
+.ig-modal-text {
+  color: #444;
+}
+
+.ig-modal-time {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 12px;
+  color: gray;
+}
+
+hr {
+  border: 0.5px solid #eee;
 }
 
 /* responsive */
@@ -446,6 +518,25 @@ body {
   .profile-avatar-big { width: 110px; height: 110px; }
   .profile-buttons { flex-direction: column; }
   .delete-btn, .avatar-upload-label { width: 100%; }
-}
 
+  .profile-posts {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .ig-modal-container {
+    width: 95%;
+    height: 90vh;
+    flex-direction: column;
+  }
+
+  .ig-modal-image-section {
+    width: 100%;
+    height: 55%;
+  }
+
+  .ig-modal-right {
+    width: 100%;
+    height: 45%;
+  }
+}
 

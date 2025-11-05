@@ -2,94 +2,85 @@ const express = require("express");
 const router = express.Router();
 const Post = require("../models/Post");
 const AuthMiddleware = require("../middleware/auth");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 
-const UPLOADS_FOLDER = "uploads";
-if (!fs.existsSync(UPLOADS_FOLDER)) fs.mkdirSync(UPLOADS_FOLDER);
-
-//multer storage setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOADS_FOLDER),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
-});
-const upload = multer({ storage });
-
-//creates the post
-router.post("/", AuthMiddleware, upload.single("image"), async (req, res) => {
+// CREATE POST (Base64 image)
+router.post("/", AuthMiddleware, async (req, res) => {
   try {
-    const { title } = req.body;
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    const { title, image } = req.body; // Base64 image
+
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     const newPost = new Post({
       user: req.user.id,
-      title,
-      image: req.file ? `uploads/${req.file.filename}` : null,
+      title: title || "",
+      image: image || null, // Save Base64
     });
 
     await newPost.save();
     res.status(201).json(newPost);
   } catch (err) {
-    console.error("Create post error:", err.message);
+    console.error("Create post error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-//get all the post
+// GET ALL POSTS
 router.get("/", async (req, res) => {
   try {
-    const posts = await Post.find().populate("user", "username avatar").sort({ createdAt: -1 });
+    const posts = await Post.find()
+      .populate("user", "username avatar")
+      .sort({ createdAt: -1 });
+
     res.json(posts);
   } catch (err) {
-    console.error("Get posts error:", err.message);
+    console.error("Get posts error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-//get posts for logged-in user 
+// GET LOGGED-IN USER POSTS
 router.get("/user", AuthMiddleware, async (req, res) => {
   try {
-    const posts = await Post.find({ user: req.user.id }).populate("user", "username avatar");
+    const posts = await Post.find({ user: req.user.id })
+      .populate("user", "username avatar");
+
     res.json(posts);
   } catch (err) {
-    console.error("Get user posts error:", err.message);
+    console.error("Get user posts error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-//get posts for any user
+// GET POSTS FOR ANY USER
 router.get("/user/:userId", async (req, res) => {
   try {
-    const posts = await Post.find({ user: req.params.userId }).populate("user", "username avatar");
+    const posts = await Post.find({ user: req.params.userId })
+      .populate("user", "username avatar");
+
     res.json(posts);
   } catch (err) {
-    console.error("Get user posts error:", err.message);
+    console.error("Get user posts error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-//deletes the post
+// DELETE POST
 router.delete("/:id", AuthMiddleware, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
+
     if (!post) return res.status(404).json({ msg: "Post not found" });
 
-    //only owner can delete
     if (post.user.toString() !== req.user.id) {
       return res.status(401).json({ msg: "Not authorized" });
-    }
-
-    //delete image file if exists
-    if (post.image) {
-      const imagePath = path.join(__dirname, "..", post.image);
-      if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
     }
 
     await post.deleteOne();
     res.json({ msg: "Post deleted successfully" });
   } catch (err) {
-    console.error("Delete post error:", err.message);
+    console.error("Delete post error:", err);
     res.status(500).send("Server Error");
   }
 });

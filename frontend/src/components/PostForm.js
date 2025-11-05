@@ -5,12 +5,20 @@ import "./Auth.css";
 
 const PostForm = () => {
   const [content, setContent] = useState("");
-  const [image, setImage] = useState(null);
+  const [imageBase64, setImageBase64] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Convert uploaded image to Base64
   const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageBase64(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
@@ -18,21 +26,24 @@ const PostForm = () => {
     setLoading(true);
     setMessage("");
 
-    const formData = new FormData();
-    formData.append("content", content);
-    if (image) formData.append("image", image);
-
     try {
-      const res = await axios.post("http://localhost:5000/api/posts", formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "multipart/form-data",
+      await axios.post(
+        "http://localhost:5000/api/posts",
+        {
+          content: content,        // ✅ Correct field name
+          image: imageBase64 || null, 
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       setMessage("Post created successfully!");
       setContent("");
-      setImage(null);
+      setImageBase64("");
     } catch (err) {
       console.error("Create post error:", err);
       setMessage("Failed to create post.");
@@ -44,7 +55,6 @@ const PostForm = () => {
   return (
     <div className="dashboard-layout">
       <Navbar />
-
       <div className="dashboard-main">
         <div className="create-post-card">
           <h2>Create Post</h2>
@@ -76,4 +86,6 @@ const PostForm = () => {
 };
 
 export default PostForm;
+
+
 

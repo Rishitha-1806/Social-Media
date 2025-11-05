@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "./Navbar";
+import PostList from "./PostList";
 import "./Auth.css";
 
 const Profile = () => {
@@ -9,6 +10,15 @@ const Profile = () => {
   const [profileData, setProfileData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const fetchPosts = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/posts/user", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setPosts(res.data);
+    } catch {}
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -18,18 +28,20 @@ const Profile = () => {
         const res = await axios.get(
           `http://localhost:5000/api/users/${user._id}`,
           {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           }
         );
 
         setProfileData(res.data.user);
-        setPosts(res.data.posts || []);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
+    fetchPosts();
   }, [user]);
 
   const handleDelete = async (postId) => {
@@ -61,7 +73,6 @@ const Profile = () => {
       );
 
       const newAvatar = res.data.avatar;
-
       setProfileData((prev) => ({ ...prev, avatar: newAvatar }));
 
       setPosts((prev) =>
@@ -85,6 +96,7 @@ const Profile = () => {
     <div className="dashboard-layout">
       <Navbar />
       <div className="dashboard-main">
+
         {profileData && (
           <div className="profile-header">
             <img src={profileData.avatar} className="profile-avatar-big" />
@@ -106,32 +118,11 @@ const Profile = () => {
           </div>
         )}
 
-        <div className="post-feed">
-          {posts.length === 0 ? (
-            <p className="no-posts">No posts yet.</p>
-          ) : (
-            posts.map((post) => (
-              <div className="post-card" key={post._id}>
-                <div className="post-header">
-                  <img src={profileData.avatar} className="post-avatar" />
-                  <span className="post-username">{profileData.username}</span>
-                </div>
-
-                <div className="post-content">
-                  <p>{post.content}</p>
-                  {post.image && <img src={post.image} className="post-image" />}
-                </div>
-
-                <button className="delete-btn" onClick={() => handleDelete(post._id)}>
-                  Delete
-                </button>
-              </div>
-            ))
-          )}
-        </div>
+        <PostList posts={posts} loading={loading} user={user} onDelete={handleDelete} />
       </div>
     </div>
   );
 };
 
 export default Profile;
+
