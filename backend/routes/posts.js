@@ -107,5 +107,40 @@ router.put("/:id/like", AuthMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+// ADD COMMENT
+router.post("/:id/comment", AuthMiddleware, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ message: "Comment text required" });
+
+    const comment = { user: req.user.id, text };
+    post.comments.push(comment);
+    await post.save();
+
+    // populate the user info
+    await post.populate("comments.user", "username avatar");
+
+    res.json(post.comments);
+  } catch (err) {
+    console.error("Add comment error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET COMMENTS FOR A POST
+router.get("/:id/comments", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).populate("comments.user", "username avatar");
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    res.json(post.comments);
+  } catch (err) {
+    console.error("Get comments error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = router;
