@@ -101,8 +101,6 @@ const Profile = () => {
           <div className="profile-header">
             <img src={profileData.avatar} className="profile-avatar-big" />
             <p className="profile-username">{profileData.username}</p>
-            <p className="profile-email">{profileData.email}</p>
-
             <div className="avatar-upload-container">
               <label className="avatar-upload-label">
                 Change Avatar
