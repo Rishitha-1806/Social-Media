@@ -6,9 +6,12 @@ const PostModal = ({ post, onClose, user }) => {
   if (!post) return null;
 
   const [likes, setLikes] = useState(post.likes?.length || 0);
-  const [liked, setLiked] = useState(user ? post.likes?.includes(user._id) : false);
+  const [liked, setLiked] = useState(
+    user ? post.likes?.includes(user._id) : false
+  );
   const [comments, setComments] = useState(post.comments || []);
   const [commentText, setCommentText] = useState("");
+  const [openMenuId, setOpenMenuId] = useState(null); // which comment menu is open?
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -55,10 +58,24 @@ const PostModal = ({ post, onClose, user }) => {
     }
   };
 
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const res = await axios.delete(
+        `http://localhost:5000/api/posts/${post._id}/comment/${commentId}`,
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+
+      setComments(res.data);
+      setOpenMenuId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="ig-modal-overlay" onClick={onClose}>
       <div className="ig-modal-container" onClick={(e) => e.stopPropagation()}>
-        
+
         <div className="ig-modal-image-section">
           <img src={post.image} alt="post" className="ig-modal-image" />
         </div>
@@ -83,6 +100,7 @@ const PostModal = ({ post, onClose, user }) => {
 
           <hr />
 
+          {/* ✅ COMMENTS SECTION WITH THREE DOTS */}
           <div className="ig-modal-comments">
             {comments.map((c) => (
               <div key={c._id} className="ig-modal-comment">
@@ -91,12 +109,36 @@ const PostModal = ({ post, onClose, user }) => {
                   className="ig-modal-comment-avatar"
                   alt=""
                 />
+
                 <div className="ig-modal-comment-text">
                   <span className="ig-modal-comment-username">
                     {c.user.username}
                   </span>
                   <span className="ig-modal-comment-content">{c.text}</span>
                 </div>
+
+                {/* ✅ SHOW ⋮ ONLY FOR COMMENT OWNER */}
+                {user && c.user._id === user._id && (
+                  <div className="ig-comment-menu-wrapper">
+                    <button
+                      className="ig-dots-btn"
+                      onClick={() =>
+                        setOpenMenuId(openMenuId === c._id ? null : c._id)
+                      }
+                    >
+                      ⋮
+                    </button>
+
+                    {openMenuId === c._id && (
+                      <button
+                        className="ig-delete-btn"
+                        onClick={() => handleDeleteComment(c._id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -116,6 +158,7 @@ const PostModal = ({ post, onClose, user }) => {
           <div className="ig-modal-time">
             {new Date(post.createdAt).toLocaleString()}
           </div>
+
         </div>
       </div>
     </div>
@@ -123,5 +166,6 @@ const PostModal = ({ post, onClose, user }) => {
 };
 
 export default PostModal;
+
 
 

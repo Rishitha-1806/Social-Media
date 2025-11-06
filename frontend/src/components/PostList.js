@@ -10,7 +10,7 @@ const PostList = ({ posts, loading, user, onDelete }) => {
 
   return (
     <>
-      <div className="post-feed">
+      <div className="ig-grid">
         {posts.map((post) => {
           const postOwnerId =
             typeof post.user === "string" ? post.user : post.user?._id;
@@ -28,12 +28,9 @@ const PostList = ({ posts, loading, user, onDelete }) => {
         })}
       </div>
 
-      {/* Modal */}
-      <PostModal post={openPost} onClose={() => setOpenPost(null)} />
+      <PostModal post={openPost} onClose={() => setOpenPost(null)} user={user} />
     </>
   );
 };
 
 export default PostList;
-
-
