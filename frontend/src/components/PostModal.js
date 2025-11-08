@@ -14,30 +14,29 @@ const PostModal = ({ post, onClose, user, onDelete }) => {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/posts/${post._id}/comments`
-        );
-        setComments(res.data);
+        const res = await axios.get(`http://localhost:5000/api/posts/${post._id}/comments`);
+        setComments(res.data || []);
       } catch (err) {}
     };
     fetchComments();
   }, [post._id]);
 
   const handleLike = async () => {
+    if (!user || !user.token) return;
     try {
       const res = await axios.put(
         `http://localhost:5000/api/posts/${post._id}/like`,
         {},
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
-      setLikes(res.data.likes);
-      setLiked(res.data.liked);
+      setLikes(res.data.likes?.length || 0);
+      setLiked(res.data.liked || false);
     } catch (err) {}
   };
 
   const handleComment = async (e) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || !user || !user.token) return;
 
     try {
       const res = await axios.post(
@@ -45,7 +44,7 @@ const PostModal = ({ post, onClose, user, onDelete }) => {
         { text: commentText },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
-      setComments(res.data);
+      setComments(res.data || []);
       setCommentText("");
     } catch (err) {}
   };
@@ -53,20 +52,18 @@ const PostModal = ({ post, onClose, user, onDelete }) => {
   return (
     <div className="ig-modal-overlay" onClick={onClose}>
       <div className="ig-modal-container" onClick={(e) => e.stopPropagation()}>
-
         <div className="ig-modal-image-section">
           <img src={post.image} alt="post" className="ig-modal-image" />
         </div>
 
         <div className="ig-modal-right">
-
           <div className="ig-modal-header">
             <div className="ig-modal-header-left">
-              <img className="ig-modal-avatar" src={post.user?.avatar} alt="" />
-              <span className="ig-modal-username">{post.user?.username}</span>
+              <img className="ig-modal-avatar" src={post.user?.avatar || ""} alt="" />
+              <span className="ig-modal-username">{post.user?.username || "Unknown"}</span>
             </div>
 
-            {user && user._id === post.user._id && (
+            {user && post.user && user._id === post.user._id && (
               <button className="ig-modal-dots" onClick={() => setMenuOpen(!menuOpen)}>
                 ⋮
               </button>
@@ -85,11 +82,7 @@ const PostModal = ({ post, onClose, user, onDelete }) => {
               >
                 Delete
               </button>
-
-              <button
-                className="ig-popup-cancel"
-                onClick={() => setMenuOpen(false)}
-              >
+              <button className="ig-popup-cancel" onClick={() => setMenuOpen(false)}>
                 Cancel
               </button>
             </div>
@@ -98,10 +91,7 @@ const PostModal = ({ post, onClose, user, onDelete }) => {
           <hr />
 
           <div className="ig-modal-like-section">
-            <button
-              onClick={handleLike}
-              className="ig-like-btn"
-            >
+            <button onClick={handleLike} className="ig-like-btn">
               {liked ? "❤️" : "🤍"} {likes}
             </button>
           </div>
@@ -110,10 +100,14 @@ const PostModal = ({ post, onClose, user, onDelete }) => {
 
           <div className="ig-modal-comments">
             {comments.map((c) => (
-              <div key={c._id} className="ig-modal-comment">
-                <img src={c.user.avatar} className="ig-modal-comment-avatar" alt="" />
+              <div key={c._id || Math.random()} className="ig-modal-comment">
+                <img
+                  src={c.user?.avatar || ""}
+                  className="ig-modal-comment-avatar"
+                  alt=""
+                />
                 <div className="ig-modal-comment-text">
-                  <span className="ig-modal-comment-username">{c.user.username}</span>
+                  <span className="ig-modal-comment-username">{c.user?.username || "Unknown"}</span>
                   <span className="ig-modal-comment-content">{c.text}</span>
                 </div>
               </div>
@@ -132,9 +126,7 @@ const PostModal = ({ post, onClose, user, onDelete }) => {
             </form>
           )}
 
-          <div className="ig-modal-time">
-            {new Date(post.createdAt).toLocaleString()}
-          </div>
+          <div className="ig-modal-time">{new Date(post.createdAt).toLocaleString()}</div>
         </div>
       </div>
     </div>
@@ -142,6 +134,7 @@ const PostModal = ({ post, onClose, user, onDelete }) => {
 };
 
 export default PostModal;
+
 
 
 

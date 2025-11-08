@@ -34,7 +34,6 @@ const Register = () => {
       await registerUser(formData);
       navigate("/dashboard");
     } catch (err) {
-      console.error("Register error:", err);
       setError(err.response?.data?.message || "Registration failed");
     }
   };
@@ -91,4 +90,3 @@ const Register = () => {
 };
 
 export default Register;
-

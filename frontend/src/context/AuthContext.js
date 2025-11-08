@@ -4,10 +4,7 @@ import axios from "axios";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
-  );
-
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
 
   useEffect(() => {
@@ -22,15 +19,25 @@ export const AuthProvider = ({ children }) => {
       { identifier, password },
       { headers: { "Content-Type": "application/json" } }
     );
-
     const { token, user } = res.data;
-
     setUser(user);
     setToken(token);
-
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("token", token);
+    return { token, user };
+  };
 
+  const registerUser = async ({ username, email, password }) => {
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/register",
+      { username, email, password },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    const { token, user } = res.data;
+    setUser(user);
+    setToken(token);
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("token", token);
     return { token, user };
   };
 
@@ -49,9 +56,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, token, login, logout, updateAvatar }}
-    >
+    <AuthContext.Provider value={{ user, token, login, logout, registerUser, updateAvatar }}>
       {children}
     </AuthContext.Provider>
   );
