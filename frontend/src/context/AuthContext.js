@@ -4,14 +4,26 @@ import axios from "axios";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || null);
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
   const [token, setToken] = useState(localStorage.getItem("token") || null);
 
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      fetchUser();
     }
   }, [token]);
+
+  const fetchUser = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/users/me");
+      const freshUser = res.data;
+      setUser(freshUser);
+      localStorage.setItem("user", JSON.stringify(freshUser));
+    } catch {}
+  };
 
   const login = async ({ identifier, password }) => {
     const res = await axios.post(
@@ -19,12 +31,15 @@ export const AuthProvider = ({ children }) => {
       { identifier, password },
       { headers: { "Content-Type": "application/json" } }
     );
-    const { token, user } = res.data;
-    setUser(user);
+
+    const { token } = res.data;
+
     setToken(token);
-    localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("token", token);
-    return { token, user };
+
+    await fetchUser();
+
+    return { token };
   };
 
   const registerUser = async ({ username, email, password }) => {
@@ -33,12 +48,15 @@ export const AuthProvider = ({ children }) => {
       { username, email, password },
       { headers: { "Content-Type": "application/json" } }
     );
-    const { token, user } = res.data;
-    setUser(user);
+
+    const { token } = res.data;
+
     setToken(token);
-    localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("token", token);
-    return { token, user };
+
+    await fetchUser();
+
+    return { token };
   };
 
   const logout = () => {
@@ -56,10 +74,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, registerUser, updateAvatar }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        login,
+        logout,
+        registerUser,
+        updateAvatar
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
+

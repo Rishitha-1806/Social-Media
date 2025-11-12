@@ -47,47 +47,51 @@ body {
   color: #666;
   margin-top: 4px;
 }
-
 .auth-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
   margin: 40px auto;
-  padding: 20px;
+  padding: 30px 25px;
   background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.07);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
 }
 
 .auth-container h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  font-weight: 600;
+  color: #333;
 }
 
 .auth-container input {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 10px;
+  font-size: 16px;
+  box-sizing: border-box;
 }
 
 .auth-container input:focus {
   border-color: #6a9df8;
   background: #fff;
-  box-shadow: 0 0 5px rgba(106, 157, 248, 0.4);
+  box-shadow: 0 0 6px rgba(106, 157, 248, 0.4);
 }
 
 .auth-container button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
   background: linear-gradient(90deg, #6a9df8, #4a7af7);
   color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 8px;
-  font-size: 17px;
-  cursor: pointer;
-  font-weight: 600;
   transition: 0.3s ease;
-  width: 100%;
 }
 
 .auth-container button:hover {
@@ -110,8 +114,7 @@ body {
 .auth-link a:hover {
   text-decoration: underline;
 }
-
-/* ===================== NAVBAR ===================== */
+/*====================== NAVBAR =======================*/
 .navbar {
   position: fixed;
   left: 0;
@@ -120,31 +123,38 @@ body {
   width: 240px;
   background: #fff;
   border-right: 1px solid #ddd;
-  padding: 10px 25px;
+  padding: 15px 25px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 15px;
+  gap: 16px;
   box-shadow: 2px 0 6px rgba(0,0,0,0.05);
 }
 
 .navbar h2 {
-  font-size: 36px;
+  font-size: 30px;
   font-weight: 700;
   color: #4a7af7;
-  margin-bottom: 10px;
-  letter-spacing: 1px;
+  margin: 8px 0 18px 0;
+  letter-spacing: 0.5px;
+}
+
+.nav-links {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .navbar a {
   display: flex;
   align-items: center;
-  gap: 18px;
-  font-size: 18px;
+  gap: 16px;
+  font-size: 17px;
   font-weight: 500;
   color: #4a4a4a;
   text-decoration: none;
-  padding: 18px 0;
+  padding: 12px 0;
   transition: 0.2s;
 }
 
@@ -157,7 +167,7 @@ body {
   margin-top: auto;
   background: #f4f4f4;
   border: 1px solid #ccc;
-  padding: 14px 18px;
+  padding: 12px 16px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
@@ -651,6 +661,253 @@ body {
   font-size: 12px;
   color: #888;
 }
+.search-container {
+  display: flex;
+  gap: 10px;
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.search-btn {
+  padding: 12px 18px;
+  background: #4a7af7;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-btn:hover {
+  background: #3c63dd;
+}
+.user-results {
+  max-width: 650px;
+  margin: auto;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.user-card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+}
+
+.user-avatar-small {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #4a7af7;
+}
+
+.username {
+  flex: 1;
+  margin-left: 15px;
+  font-size: 17px;
+  font-weight: 500;
+  color: #333;
+}
+.btn-follow {
+  background: #4a7af7;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-unfollow {
+  background: #ef4444;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-requested {
+  background: #ddd;
+  color: #333;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+}
+
+.req-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-accept {
+  background: #4caf50;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-reject {
+  background: #ef4444;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 60px;
+  z-index: 999;
+}
+
+.search-modal {
+  background: #fff;
+  width: 400px;
+  max-width: 90%;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.search-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.search-form input {
+  flex: 1;
+  padding: 8px;
+}
+
+.user-results {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.notifications-page {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 0 15px;
+}
+
+.notification-card {
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 15px;
+  margin: 10px 0;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  transition: background-color 0.3s ease;
+}
+
+.notification-card.unread {
+  background-color: #eaf6ff;
+}
+
+.notification-card.read {
+  background-color: #f8f8f8;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notif-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #00a2ff;
+}
+
+.notif-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-text strong {
+  margin-right: 5px;
+}
+
+.notif-date {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.notif-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 10px;
+}
+
+.notif-actions button {
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.notif-actions button:first-child {
+  background-color: #00a2ff;
+  color: white;
+}
+
+.notif-actions button:first-child:hover {
+  background-color: #0083cc;
+}
+
+.notif-actions button:last-child {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+.notif-actions button:last-child:hover {
+  background-color: #d9363e;
+}
+
+.no-notifications {
+  text-align: center;
+  font-style: italic;
+  color: #666;
+  margin-top: 20px;
+}
+
 
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 900px) {

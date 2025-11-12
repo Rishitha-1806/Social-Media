@@ -12,8 +12,7 @@ const auth = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Attaches the user information to request
-    req.user = { id: decoded.id };
+    req.user = decoded.id;
     next();
   } catch (err) {
     console.error("Auth middleware error:", err.message);
@@ -22,4 +21,5 @@ const auth = (req, res, next) => {
 };
 
 module.exports = auth;
+
 

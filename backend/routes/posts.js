@@ -1,146 +1,143 @@
 const express = require("express");
 const router = express.Router();
 const Post = require("../models/Post");
+const User = require("../models/User");
 const AuthMiddleware = require("../middleware/auth");
 
-// CREATE POST (Base64 image)
 router.post("/", AuthMiddleware, async (req, res) => {
   try {
-    const { title, image } = req.body; // Base64 image
-
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    const { title, image } = req.body;
+    const userId = typeof req.user === "string" ? req.user : req.user.id;
+    if (!userId) return res.status(401).json({ message: "User not authenticated" });
 
     const newPost = new Post({
-      user: req.user.id,
+      user: userId,
       title: title || "",
-      image: image || null, // Save Base64
+      image: image || null,
     });
 
     await newPost.save();
     res.status(201).json(newPost);
   } catch (err) {
-    console.error("Create post error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-// GET ALL POSTS
 router.get("/", async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate("user", "username avatar")
+      .populate("user", "username avatar isPrivate")
       .sort({ createdAt: -1 });
 
-    res.json(posts);
+    const visiblePosts = posts.filter(p => !p.user.isPrivate);
+    res.json(visiblePosts);
   } catch (err) {
-    console.error("Get posts error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-// GET LOGGED-IN USER POSTS
+async function canViewPosts(viewerId, ownerId) {
+  const owner = await User.findById(ownerId);
+  if (!owner.isPrivate) return true;
+  if (viewerId && owner.followers.includes(viewerId)) return true;
+  return false;
+}
+
 router.get("/user", AuthMiddleware, async (req, res) => {
   try {
-    const posts = await Post.find({ user: req.user.id })
-      .populate("user", "username avatar");
-
+    const userId = typeof req.user === "string" ? req.user : req.user.id;
+    const posts = await Post.find({ user: userId }).populate("user", "username avatar");
     res.json(posts);
   } catch (err) {
-    console.error("Get user posts error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-// GET POSTS FOR ANY USER
-router.get("/user/:userId", async (req, res) => {
+router.get("/user/:userId", AuthMiddleware, async (req, res) => {
   try {
+    const canView = await canViewPosts(req.user, req.params.userId);
+    if (!canView) return res.status(403).json({ private: true, message: "This account is private" });
+
     const posts = await Post.find({ user: req.params.userId })
       .populate("user", "username avatar");
-
     res.json(posts);
   } catch (err) {
-    console.error("Get user posts error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-// DELETE POST
 router.delete("/:id", AuthMiddleware, async (req, res) => {
   try {
+    const userId = typeof req.user === "string" ? req.user : req.user.id;
     const post = await Post.findById(req.params.id);
-
     if (!post) return res.status(404).json({ msg: "Post not found" });
-
-    if (post.user.toString() !== req.user.id) {
-      return res.status(401).json({ msg: "Not authorized" });
-    }
-
+    if (post.user.toString() !== userId) return res.status(401).json({ msg: "Not authorized" });
     await post.deleteOne();
     res.json({ msg: "Post deleted successfully" });
   } catch (err) {
-    console.error("Delete post error:", err);
     res.status(500).send("Server Error");
   }
 });
-// LIKE / UNLIKE POST
+
 router.put("/:id/like", AuthMiddleware, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id).populate("user");
     if (!post) return res.status(404).json({ message: "Post not found" });
+    const canView = await canViewPosts(req.user, post.user._id);
+    if (!canView) return res.status(403).json({ private: true, message: "This account is private" });
 
-    const userId = req.user.id;
-
+    const userId = typeof req.user === "string" ? req.user : req.user.id;
     if (post.likes.includes(userId)) {
-      // Unlike
-      post.likes = post.likes.filter((id) => id.toString() !== userId);
+      post.likes = post.likes.filter(id => id.toString() !== userId);
     } else {
-      // Like
       post.likes.push(userId);
     }
 
     await post.save();
     res.json({ likes: post.likes.length, liked: post.likes.includes(userId) });
   } catch (err) {
-    console.error("Like/unlike post error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
-// ADD COMMENT
+
 router.post("/:id/comment", AuthMiddleware, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id).populate("user");
     if (!post) return res.status(404).json({ message: "Post not found" });
+    const canView = await canViewPosts(req.user, post.user._id);
+    if (!canView) return res.status(403).json({ private: true, message: "This account is private" });
 
     const { text } = req.body;
     if (!text) return res.status(400).json({ message: "Comment text required" });
 
-    const comment = { user: req.user.id, text };
+    const userId = typeof req.user === "string" ? req.user : req.user.id;
+    const comment = { user: userId, text };
     post.comments.push(comment);
     await post.save();
-
-    // populate the user info
     await post.populate("comments.user", "username avatar");
-
     res.json(post.comments);
   } catch (err) {
-    console.error("Add comment error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// GET COMMENTS FOR A POST
-router.get("/:id/comments", async (req, res) => {
+router.get("/:id/comments", AuthMiddleware, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate("comments.user", "username avatar");
+    const post = await Post.findById(req.params.id)
+      .populate("user")
+      .populate("comments.user", "username avatar");
     if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const canView = await canViewPosts(req.user, post.user._id);
+    if (!canView) return res.status(403).json({ private: true, message: "This account is private" });
 
     res.json(post.comments);
   } catch (err) {
-    console.error("Get comments error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 module.exports = router;
+
+
+

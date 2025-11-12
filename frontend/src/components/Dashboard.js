@@ -14,10 +14,18 @@ const Dashboard = () => {
     if (!user?.token) return;
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/posts/user/${user._id}`, {
+      const res = await axios.get(`http://localhost:5000/api/posts`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
-      setPosts(res.data);
+
+      const visiblePosts = res.data.filter((p) => {
+        if (!p.user.isPrivate) return true;
+        if (p.user.followers?.includes(user._id)) return true;
+        if (p.user._id === user._id) return true;
+        return false;
+      });
+
+      setPosts(visiblePosts);
     } catch (err) {
       console.error("Error fetching posts:", err);
       alert("Error fetching posts.");
@@ -32,12 +40,10 @@ const Dashboard = () => {
 
   const handleDelete = async (postId) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
-
     try {
       await axios.delete(`http://localhost:5000/api/posts/${postId}`, {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
-
       setPosts((prev) => prev.filter((p) => p._id !== postId));
     } catch (err) {
       console.error("Delete post error:", err);
@@ -54,10 +60,8 @@ const Dashboard = () => {
             <div className="spinner"></div>
           </div>
         )}
-
         <div className="post-feed">
           {!loading && posts.length === 0 && <p>No posts to show.</p>}
-
           {posts.map((post) => {
             const postOwnerId = post.user?._id || post.user;
             return (
@@ -66,7 +70,7 @@ const Dashboard = () => {
                 post={post}
                 userId={user?._id}
                 postOwnerId={postOwnerId}
-                onDelete={handleDelete}
+                onDelete={post.user._id === user._id ? handleDelete : undefined}
               />
             );
           })}
@@ -77,6 +81,9 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
+
 
 
 

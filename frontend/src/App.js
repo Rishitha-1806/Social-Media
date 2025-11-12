@@ -7,6 +7,9 @@ import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import PostForm from "./components/PostForm";
 import Profile from "./components/Profile";
+import SearchUsers from "./components/SearchUsers";
+import Notifications from "./components/Notifications";
+import FollowByUsername from "./components/FollowByUsername";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -18,6 +21,7 @@ const App = () => {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
       <Route
         path="/dashboard"
         element={
@@ -26,6 +30,16 @@ const App = () => {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/search"
+        element={
+          <ProtectedRoute>
+            <SearchUsers />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/posts/new"
         element={
@@ -34,6 +48,7 @@ const App = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/profile/:id"
         element={
@@ -42,12 +57,32 @@ const App = () => {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/follow-by-username"
+        element={
+          <ProtectedRoute>
+            <FollowByUsername />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
 
 export default App;
+
 
 
 
