@@ -4,20 +4,16 @@ import Navbar from "./Navbar";
 import "./Auth.css";
 
 const PostForm = () => {
-  const [content, setContent] = useState("");
-  const [imageBase64, setImageBase64] = useState(""); 
+  const [title, setTitle] = useState("");
+  const [imageBase64, setImageBase64] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Convert uploaded image to Base64
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageBase64(reader.result);
-    };
+    reader.onloadend = () => setImageBase64(reader.result);
     reader.readAsDataURL(file);
   };
 
@@ -25,14 +21,10 @@ const PostForm = () => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-
     try {
       await axios.post(
         "http://localhost:5000/api/posts",
-        {
-          content: content,        // ✅ Correct field name
-          image: imageBase64 || null, 
-        },
+        { title, image: imageBase64 || null },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -40,12 +32,11 @@ const PostForm = () => {
           },
         }
       );
-
       setMessage("Post created successfully!");
-      setContent("");
+      setTitle("");
       setImageBase64("");
     } catch (err) {
-      console.error("Create post error:", err);
+      console.error(err);
       setMessage("Failed to create post.");
     } finally {
       setLoading(false);
@@ -58,23 +49,18 @@ const PostForm = () => {
       <div className="dashboard-main">
         <div className="create-post-card">
           <h2>Create Post</h2>
-          <p className="post-subtext">Share your thoughts with your friends 🌍</p>
-
           {message && <div className="post-message">{message}</div>}
-
           <form className="create-post-form" onSubmit={handleSubmit}>
             <textarea
               placeholder="What's on your mind?"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               required
             />
-
             <label className="upload-label">
               Upload Image
               <input type="file" onChange={handleImageChange} />
             </label>
-
             <button type="submit" disabled={loading}>
               {loading ? "Posting..." : "Post"}
             </button>
@@ -86,6 +72,10 @@ const PostForm = () => {
 };
 
 export default PostForm;
+
+
+
+
 
 
 

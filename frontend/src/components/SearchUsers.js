@@ -5,86 +5,113 @@ import Navbar from "./Navbar";
 import "./Auth.css";
 
 const SearchUsers = () => {
-  const { user, token } = useAuth();
+  const { user, token, refreshUser } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const getId = (v) => (v?._id ? v._id.toString() : v ? v.toString() : "");
 
   const searchUsers = async () => {
     if (!query.trim()) return;
     setLoading(true);
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/users/search?username=${query}`,
+        `http://localhost:5000/api/users/search?username=${encodeURIComponent(query)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const users = res.data.users || [];
+      const meId = getId(user);
+      const myFollowing = (user?.following || []).map(getId);
+      const myRequests = (user?.followRequests || []).map(getId);
 
-      const withRelation = users.map((u) => {
-        if (user.following?.includes(u._id)) return { ...u, relation: "following" };
-        if (user.requestsSent?.includes(u._id)) return { ...u, relation: "requested" };
-        if (user.requestsReceived?.includes(u._id)) return { ...u, relation: "requested_you" };
+      const mapped = (res.data.users || []).map((u) => {
+        const uId = getId(u);
+        const uRequests = (u.followRequests || []).map(getId);
+        const uFollowers = (u.followers || []).map(getId);
+        const uFollowing = (u.following || []).map(getId);
+
+        if (uId === meId) return { ...u, relation: "self" };
+        if (myFollowing.includes(uId)) return { ...u, relation: "following" };
+        if (uRequests.includes(meId)) return { ...u, relation: "requested" };
+        if (myRequests.includes(uId)) return { ...u, relation: "requested_you" };
+        if (uFollowing.includes(meId)) return { ...u, relation: "followback" };
         return { ...u, relation: "none" };
       });
 
-      setResults(withRelation);
+      setResults(mapped);
     } catch {
       setResults([]);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
-  const updateRelation = (id, relation) => {
+  const updateRelation = (idv, state, message) => {
     setResults((prev) =>
-      prev.map((u) => (u._id === id ? { ...u, relation } : u))
+      prev.map((u) =>
+        u._id === idv ? { ...u, relation: state, message } : u
+      )
     );
   };
 
-  const follow = async (id) => {
-    await axios.post(
-      `http://localhost:5000/api/users/follow/${id}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    updateRelation(id, "following");
+  const follow = async (idv) => {
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/follow/${idv}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      updateRelation(idv, res.data.status);
+      refreshUser();
+    } catch {}
   };
 
-  const requestFollow = async (id) => {
-    await axios.post(
-      `http://localhost:5000/api/users/request/${id}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    updateRelation(id, "requested");
+  const unfollow = async (idv) => {
+    try {
+      await axios.post(
+        `http://localhost:5000/api/follow/unfollow/${idv}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      updateRelation(idv, "none");
+      refreshUser();
+    } catch {}
   };
 
-  const unfollow = async (id) => {
-    await axios.post(
-      `http://localhost:5000/api/users/unfollow/${id}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    updateRelation(id, "none");
+  const acceptRequest = async (idv) => {
+    try {
+      await axios.post(
+        `http://localhost:5000/api/follow/accept-request/${idv}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      updateRelation(idv, "followback");
+      refreshUser();
+    } catch {}
   };
 
-  const accept = async (id) => {
-    await axios.post(
-      `http://localhost:5000/api/users/requests/accept/${id}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    updateRelation(id, "following");
+  const rejectRequest = async (idv) => {
+    try {
+      await axios.post(
+        `http://localhost:5000/api/follow/ignore-request/${idv}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      updateRelation(idv, "none");
+      refreshUser();
+    } catch {}
   };
 
-  const reject = async (id) => {
-    await axios.post(
-      `http://localhost:5000/api/users/requests/reject/${id}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    updateRelation(id, "none");
+  const followBack = async (idv, username) => {
+    try {
+      await axios.post(
+        `http://localhost:5000/api/follow/followback/${idv}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      updateRelation(idv, "following", `You started following ${username}`);
+      refreshUser();
+    } catch {}
   };
 
   return (
@@ -100,7 +127,9 @@ const SearchUsers = () => {
             onChange={(e) => setQuery(e.target.value)}
             className="search-input"
           />
-          <button onClick={searchUsers} className="search-btn">Search</button>
+          <button onClick={searchUsers} className="search-btn">
+            Search
+          </button>
         </div>
 
         {loading && (
@@ -113,45 +142,68 @@ const SearchUsers = () => {
           {results.map((u) => (
             <div key={u._id} className="user-card">
               <img
-                src={
-                  u.avatar ||
-                  "https://icon-library.com/images/default-user-icon/default-user-icon-13.jpg"
-                }
+                src={u.avatar || "/default-avatar.png"}
                 className="user-avatar-small"
               />
               <p className="username">{u.username}</p>
 
-              {u.relation === "following" && (
-                <button onClick={() => unfollow(u._id)} className="btn-unfollow">
-                  Unfollow
-                </button>
-              )}
-
-              {u.relation === "requested" && (
-                <button className="btn-requested">Requested</button>
-              )}
-
-              {u.relation === "requested_you" && (
-                <div className="req-actions">
-                  <button onClick={() => accept(u._id)} className="btn-accept">
-                    Accept
+              <div className="user-action-buttons">
+                {u.relation === "none" && (
+                  <button
+                    onClick={() => follow(u._id)}
+                    className="btn-follow"
+                  >
+                    Follow
                   </button>
-                  <button onClick={() => reject(u._id)} className="btn-reject">
-                    Reject
-                  </button>
-                </div>
-              )}
+                )}
 
-              {u.relation === "none" && (
-                <button
-                  onClick={() =>
-                    u.isPrivate ? requestFollow(u._id) : follow(u._id)
-                  }
-                  className="btn-follow"
-                >
-                  Follow
-                </button>
-              )}
+                {u.relation === "requested" && (
+                  <button className="btn-requested">Requested</button>
+                )}
+
+                {u.relation === "following" && (
+                  <button
+                    onClick={() => unfollow(u._id)}
+                    className="btn-unfollow"
+                  >
+                    Following
+                  </button>
+                )}
+
+                {u.relation === "requested_you" && (
+                  <>
+                    <button
+                      onClick={() => acceptRequest(u._id)}
+                      className="btn-accept"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => rejectRequest(u._id)}
+                      className="btn-reject"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+
+                {u.relation === "followback" && (
+                  <button
+                    onClick={() => followBack(u._id, u.username)}
+                    className="btn-followback"
+                  >
+                    Follow Back
+                  </button>
+                )}
+
+                {u.relation === "self" && (
+                  <span className="self-badge">You</span>
+                )}
+
+                {u.relation === "following" && u.message && (
+                  <span className="followed-msg">{u.message}</span>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -161,3 +213,6 @@ const SearchUsers = () => {
 };
 
 export default SearchUsers;
+
+
+
